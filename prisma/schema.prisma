@@ -1,0 +1,200 @@
+// Prisma Schema
+// Follows: Naming conventions, Type safety, Database best practices
+// Generator untuk team: Selalu run 'npm run prisma:generate' setelah edit schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CUSTOM ATTRIBUTES (Untuk konsistensi team)
+// ============================================
+// @@map("table_name")       - Map model ke table name
+// @db.Uuid                  - UUID type di database
+// @default(uuid())          - Auto-generate UUID
+// @updatedAt                - Auto-update timestamp
+// @map("column_name")       - Map field ke column name
+// @@index([field])          - Index untuk performance
+// @@unique([field1, field2]) - Composite unique
+// ============================================
+
+/// User model untuk authentication dan authorization
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  email           String   @unique
+  password        String
+  firstName       String   @map("first_name")
+  lastName        String?  @map("last_name")
+  role            Role     @default(USER)
+  status          UserStatus @default(ACTIVE)
+  lastLoginAt     DateTime? @map("last_login_at")
+  emailVerifiedAt DateTime? @map("email_verified_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  // Relations
+  refreshTokens   RefreshToken[]
+  apiKeys         ApiKey[]
+  securityAudits  SecurityAudit[]
+  
+  // Indexes untuk query performance
+  @@index([email])
+  @@index([status])
+  @@index([role])
+  @@index([createdAt])
+  @@map("users")
+}
+
+/// Refresh token untuk JWT token refresh
+model RefreshToken {
+  id              String   @id @default(uuid()) @db.Uuid
+  token           String   @unique
+  userId          String   @map("user_id")
+  expiresAt       DateTime @map("expires_at")
+  revokedAt       DateTime? @map("revoked_at")
+  replacedByToken String?  @map("replaced_by_token")
+  reason          String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+/// API Key untuk Zero Trust authentication
+model ApiKey {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String
+  key             String   @unique // Hashed API key
+  keyPrefix       String   @map("key_prefix") // First 8 chars for identification
+  userId          String   @map("user_id")
+  permissions     String[] // ['read', 'write', 'delete']
+  expiresAt       DateTime? @map("expires_at")
+  lastUsedAt      DateTime? @map("last_used_at")
+  rotatedAt       DateTime? @map("rotated_at")
+  revokedAt       DateTime? @map("revoked_at")
+  revokeReason    String?  @map("revoke_reason")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([key])
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([keyPrefix])
+  @@map("api_keys")
+}
+
+/// Security Audit Log untuk Zero Trust monitoring
+model SecurityAudit {
+  id              String   @id @default(uuid()) @db.Uuid
+  eventType       String   @map("event_type") // LOGIN, LOGOUT, API_CALL, etc
+  eventLevel      String   @map("event_level") // INFO, WARN, ERROR, CRITICAL
+  userId          String?  @map("user_id")
+  ipAddress       String   @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  path            String?
+  method          String?
+  statusCode      Int?     @map("status_code")
+  metadata        Json?    // Additional context
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Indexes
+  @@index([eventType])
+  @@index([userId])
+  @@index([ipAddress])
+  @@index([createdAt])
+  @@index([eventLevel])
+  @@map("security_audits")
+}
+
+/// Example Product model
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  status      ProductStatus @default(DRAFT)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  
+  // Indexes
+  @@index([status])
+  @@index([createdAt])
+  @@map("products")
+}
+
+/// Example Order model
+model Order {
+  id          String   @id @default(uuid()) @db.Uuid
+  orderNumber String   @unique @map("order_number")
+  userId      String   @map("user_id")
+  totalAmount Decimal  @db.Decimal(10, 2) @map("total_amount")
+  status      OrderStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+  
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Indexes
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+// ============================================
+// ENUMS (Untuk type safety)
+// ============================================
+
+enum Role {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}

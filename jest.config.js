@@ -1,0 +1,15 @@
+module.exports = {
+  testEnvironment: 'node',
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: ['src/**/*.js'],
+  coveragePathIgnorePatterns: ['/node_modules/', '/tests/', 'src/index.js'],
+  testMatch: ['**/tests/**/*.test.js'],
+  setupFilesAfterEnv: ['./tests/setup.js'],
+  verbose: true,
+  testTimeout: 30000,
+  forceExit: true,
+  detectOpenHandles: true,
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true,
+};
