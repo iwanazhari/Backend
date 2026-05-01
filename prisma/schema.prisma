@@ -35,7 +35,7 @@ model User {
   status          UserStatus @default(ACTIVE)
   lastLoginAt     DateTime? @map("last_login_at")
   emailVerifiedAt DateTime? @map("email_verified_at")
-  createdAt       DateTime @default(now()) @map("created_at")
+  createdAt       DateTime @default(now()) @map("createrefresh_tokens_user_id_fkeyd_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
@@ -43,7 +43,12 @@ model User {
   refreshTokens   RefreshToken[]
   apiKeys         ApiKey[]
   securityAudits  SecurityAudit[]
-  
+  magicLinks      MagicLink[]
+  otpRequests     OTPRequest[]
+  oauthAccounts   OAuthAccount[]
+  sessions        Session[]
+  orders          Order[]
+
   // Indexes untuk query performance
   @@index([email])
   @@index([status])
@@ -62,10 +67,10 @@ model RefreshToken {
   replacedByToken String?  @map("replaced_by_token")
   reason          String?
   createdAt       DateTime @default(now()) @map("created_at")
-  
+
   // Relations
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Indexes
   @@index([token])
   @@index([userId])
@@ -88,10 +93,10 @@ model ApiKey {
   revokeReason    String?  @map("revoke_reason")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // Indexes
   @@index([key])
   @@index([userId])
@@ -113,10 +118,10 @@ model SecurityAudit {
   statusCode      Int?     @map("status_code")
   metadata        Json?    // Additional context
   createdAt       DateTime @default(now()) @map("created_at")
-  
+
   // Relations
   user            User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  
+
   // Indexes
   @@index([eventType])
   @@index([userId])
@@ -126,23 +131,7 @@ model SecurityAudit {
   @@map("security_audits")
 }
 
-/// Example Product model
-model Product {
-  id          String   @id @default(uuid()) @db.Uuid
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  stock       Int      @default(0)
-  status      ProductStatus @default(DRAFT)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  deletedAt   DateTime? @map("deleted_at")
-  
-  // Indexes
-  @@index([status])
-  @@index([createdAt])
-  @@map("products")
-}
+
 
 /// Example Order model
 model Order {
@@ -155,16 +144,103 @@ model Order {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
-  
+
   // Relations
-  user        User     @relation(fields: [userId], references: [id])
-  
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   // Indexes
   @@index([orderNumber])
   @@index([userId])
   @@index([status])
   @@index([createdAt])
   @@map("orders")
+}
+
+/// Magic Link untuk passwordless authentication
+model MagicLink {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id")
+  token           String   @unique
+  expiresAt       DateTime @map("expires_at")
+  usedAt          DateTime? @map("used_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("magic_links")
+}
+
+/// OTP Request untuk SMS/Email OTP
+model OTPRequest {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String?  @map("user_id")
+  identifier      String   // email atau phone number
+  code            String
+  type            String   // 'email' atau 'sms'
+  expiresAt       DateTime @map("expires_at")
+  usedAt          DateTime? @map("used_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([identifier])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("otp_requests")
+}
+
+/// OAuth Account untuk social login
+model OAuthAccount {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id")
+  provider        String   // 'google', 'github', 'microsoft', 'linkedin'
+  providerAccountId String @unique @map("provider_account_id")
+  accessToken     String   @map("access_token")
+  refreshToken    String?  @map("refresh_token")
+  expiresAt       DateTime? @map("expires_at")
+  scope           String?  // permissions granted
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([provider])
+  @@index([providerAccountId])
+  @@map("oauth_accounts")
+}
+
+/// Session untuk device management
+model Session {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @map("user_id")
+  refreshToken    String   @unique @map("refresh_token")
+  deviceInfo      Json?    @map("device_info") // { deviceId, deviceName, deviceType, os, browser }
+  ipAddress       String   @map("ip_address")
+  userAgent       String   @map("user_agent")
+  expiresAt       DateTime @map("expires_at")
+  revokedAt       DateTime? @map("revoked_at")
+  revokeReason    String?  @map("revoke_reason")
+  lastActiveAt    DateTime @default(now()) @map("last_active_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([refreshToken])
+  @@index([expiresAt])
+  @@map("sessions")
 }
 
 // ============================================

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Starter Kit - Pricing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+
+        /* Urgency Banner */
+        .urgency-banner {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .urgency-banner h3 {
+            color: #92400e;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .countdown-item {
+            background: #f59e0b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            min-width: 80px;
+        }
+
+        .countdown-number {
+            font-size: 32px;
+            font-weight: bold;
+            display: block;
+        }
+
+        .countdown-label {
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Value Stack */
+        .value-stack {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .value-stack h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .value-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .value-item:last-child {
+            border-bottom: none;
+        }
+
+        .value-item-name {
+            color: #333;
+        }
+
+        .value-item-price {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .value-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 3px solid #667eea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .value-total-label {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .value-total-price {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .value-savings {
+            color: #10b981;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+
+        /* Pricing Tiers */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .pricing-card.popular {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.popular:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 5px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tier-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .tier-price {
+            margin-bottom: 20px;
+        }
+
+        .price-current {
+            font-size: 48px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .price-original {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 24px;
+            margin-left: 10px;
+        }
+
+        .price-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .tier-description {
+            color: #666;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e5e5;
+        }
+
+        .tier-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .tier-features li {
+            padding: 10px 0;
+            color: #333;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .tier-features li::before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .tier-features li.disabled {
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .tier-features li.disabled::before {
+            content: "✗";
+            color: #999;
+        }
+
+        .cta-button {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .cta-button:hover {
+            background: #5568d3;
+        }
+
+        .cta-button.secondary {
+            background: #e5e5e5;
+            color: #333;
+        }
+
+        .cta-button.secondary:hover {
+            background: #d4d4d4;
+        }
+
+        /* Guarantee */
+        .guarantee {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .guarantee-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .guarantee h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+
+        .guarantee p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Payment Options */
+        .payment-options {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .payment-options h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .payment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .payment-option {
+            padding: 20px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-option:hover,
+        .payment-option.selected {
+            border-color: #667eea;
+            background: #f6f7ff;
+        }
+
+        .payment-amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .payment-frequency {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .payment-total {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        /* FAQ */
+        .faq {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+
+        .faq h3 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #1a1a1a;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* Trust Badges */
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin: 40px 0;
+        }
+
+        .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .trust-badge-icon {
+            font-size: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .header p {
+                font-size: 16px;
+            }
+
+            .countdown {
+                gap: 10px;
+            }
+
+            .countdown-item {
+                min-width: 60px;
+                padding: 8px 12px;
+            }
+
+            .countdown-number {
+                font-size: 24px;
+            }
+
+            .pricing-card.popular {
+                transform: none;
+            }
+
+            .pricing-card.popular:hover {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Simple, Transparent Pricing</h1>
+            <p>Invest in your development speed. ROI in 11 days.</p>
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="trust-badges">
+            <div class="trust-badge">
+                <span class="trust-badge-icon">✅</span>
+                <span>500+ Developers</span>
+            </div>
+            <div class="trust-badge">
+                <span class="trust-badge-icon">🔒</span>
+                <span>Secure Checkout</span>
+            </div>
+            <div class="trust-badge">
+                <span class="trust-badge-icon">⚡</span>
+                <span>Instant Access</span>
+            </div>
+            <div class="trust-badge">
+                <span class="trust-badge-icon">💬</span>
+                <span>24/7 Support</span>
+            </div>
+            <div class="trust-badge">
+                <span class="trust-badge-icon">📄</span>
+                <span>Invoice Available</span>
+            </div>
+        </div>
+
+        <!-- Urgency Banner -->
+        <div class="urgency-banner">
+            <h3>⏰ Launch Pricing Ends In:</h3>
+            <div class="countdown" id="countdown">
+                <div class="countdown-item">
+                    <span class="countdown-number" id="days">47</span>
+                    <span class="countdown-label">Days</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="hours">23</span>
+                    <span class="countdown-label">Hours</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="minutes">59</span>
+                    <span class="countdown-label">Minutes</span>
+                </div>
+                <div class="countdown-item">
+                    <span class="countdown-number" id="seconds">59</span>
+                    <span class="countdown-label">Seconds</span>
+                </div>
+            </div>
+            <p style="margin-top: 15px; color: #92400e;">
+                Regular price: <strong>$299</strong> → Today: <strong>$199</strong> (Save $100 / 33% off)
+            </p>
+        </div>
+
+        <!-- Value Stack -->
+        <div class="value-stack">
+            <h3>📦 What You Get</h3>
+            <div class="value-item">
+                <span class="value-item-name">Backend Starter Kit (Production-Ready)</span>
+                <span class="value-item-price">$499</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">3 Business Templates (SaaS, E-commerce, Marketplace)</span>
+                <span class="value-item-price">$897</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Code Generation System (10+ Generators)</span>
+                <span class="value-item-price">$299</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Zero-Trust Security (10 Layers)</span>
+                <span class="value-item-price">$399</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Complete Testing Suite</span>
+                <span class="value-item-price">$199</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Documentation & Quick Reference</span>
+                <span class="value-item-price">$149</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Video Tutorials (4 Hours)</span>
+                <span class="value-item-price">$299</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Discord Community Access</span>
+                <span class="value-item-price">$199</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Lifetime Updates</span>
+                <span class="value-item-price">$499</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Priority Support (24h Response)</span>
+                <span class="value-item-price">$299</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Code Review Session (1 Hour)</span>
+                <span class="value-item-price">$399</span>
+            </div>
+            <div class="value-item">
+                <span class="value-item-name">Affiliate Program (20% Commission)</span>
+                <span class="value-item-price">$299</span>
+            </div>
+            <div class="value-total">
+                <div>
+                    <div class="value-total-label">Total Value</div>
+                    <div class="value-savings">You save: $3,796 (95% off)</div>
+                </div>
+                <div class="value-total-price">$3,995 → $199</div>
+            </div>
+        </div>
+
+        <!-- Pricing Tiers -->
+        <div class="pricing-grid">
+            <!-- Starter Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Starter</div>
+                <div class="tier-price">
+                    <span class="price-current">$149</span>
+                </div>
+                <div class="tier-description">
+                    Perfect for hobby projects and learning
+                </div>
+                <ul class="tier-features">
+                    <li>Complete Starter Kit</li>
+                    <li>Code Generation System</li>
+                    <li>All Core Features</li>
+                    <li>Documentation Access</li>
+                    <li>30 Days Email Support</li>
+                    <li>1 Year of Updates</li>
+                    <li>Commercial License</li>
+                    <li class="disabled">Lifetime Updates</li>
+                    <li class="disabled">Discord Community</li>
+                    <li class="disabled">Video Tutorials</li>
+                    <li class="disabled">Code Review Session</li>
+                </ul>
+                <a href="/checkout?tier=starter" class="cta-button secondary">Buy Starter</a>
+            </div>
+
+            <!-- Pro Tier (Most Popular) -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">⭐ Most Popular</div>
+                <div class="tier-name">Pro</div>
+                <div class="tier-price">
+                    <span class="price-current">$199</span>
+                    <span class="price-original">$299</span>
+                    <div class="price-label">Launch pricing (save $100)</div>
+                </div>
+                <div class="tier-description">
+                    Best value for professional developers
+                </div>
+                <ul class="tier-features">
+                    <li>Everything in Starter, plus:</li>
+                    <li><strong>Lifetime Updates</strong> (free forever)</li>
+                    <li><strong>Priority Email Support</strong> (24h response)</li>
+                    <li><strong>Discord Community Access</strong></li>
+                    <li><strong>Monthly Office Hours Calls</strong></li>
+                    <li><strong>Code Review Session</strong> (1 hour)</li>
+                    <li><strong>Premium Tutorials</strong> (4 hours video)</li>
+                    <li><strong>Deployment Support</strong></li>
+                    <li><strong>Team License</strong> (up to 5 developers)</li>
+                    <li><strong>20% Affiliate Commission</strong></li>
+                </ul>
+                <a href="/checkout?tier=pro" class="cta-button">Get Pro Access →</a>
+            </div>
+
+            <!-- Agency Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Agency</div>
+                <div class="tier-price">
+                    <span class="price-current">$999</span>
+                </div>
+                <div class="tier-description">
+                    For teams and agencies delivering to clients
+                </div>
+                <ul class="tier-features">
+                    <li>Everything in Pro, plus:</li>
+                    <li><strong>Unlimited Team Seats</strong></li>
+                    <li><strong>Dedicated Slack Channel</strong></li>
+                    <li><strong>Monthly Architecture Reviews</strong></li>
+                    <li><strong>Priority Feature Requests</strong></li>
+                    <li><strong>Custom Training</strong> (2 hours)</li>
+                    <li><strong>White-Label License</strong> (remove branding)</li>
+                    <li><strong>SLA</strong> (99.9% uptime guarantee)</li>
+                    <li><strong>Custom Integrations</strong> (1 session)</li>
+                    <li><strong>Dedicated Account Manager</strong></li>
+                </ul>
+                <a href="/contact?tier=agency" class="cta-button secondary">Contact Sales</a>
+            </div>
+        </div>
+
+        <!-- Guarantee -->
+        <div class="guarantee">
+            <div class="guarantee-icon">🔒</div>
+            <h3>30-Day "No Questions Asked" Money-Back Guarantee</h3>
+            <p>
+                Try it for 30 days. Build a project. Ship faster.<br><br>
+                If you don't save at least 20 hours, if the code quality doesn't impress you, 
+                or if you don't ship your project faster—email us for a <strong>full refund</strong>. 
+                No questions asked.<br><br>
+                <strong>You keep the code. No hard feelings.</strong><br><br>
+                The risk is 100% on us. The upside is 100% yours.
+            </p>
+        </div>
+
+        <!-- Payment Options -->
+        <div class="payment-options">
+            <h3>💳 Flexible Payment Options</h3>
+            <div class="payment-grid">
+                <div class="payment-option selected">
+                    <div class="payment-amount">$199</div>
+                    <div class="payment-frequency">One-time payment</div>
+                    <div class="payment-total">Total: $199</div>
+                </div>
+                <div class="payment-option">
+                    <div class="payment-amount">$67</div>
+                    <div class="payment-frequency">per month (3 months)</div>
+                    <div class="payment-total">Total: $201</div>
+                </div>
+                <div class="payment-option">
+                    <div class="payment-amount">$35</div>
+                    <div class="payment-frequency">per month (6 months)</div>
+                    <div class="payment-total">Total: $210</div>
+                </div>
+            </div>
+            <p style="margin-top: 20px; color: #666; font-size: 14px;">
+                Payment plans powered by Stripe. No credit check required.
+            </p>
+        </div>
+
+        <!-- FAQ -->
+        <div class="faq">
+            <h3>❓ Frequently Asked Questions</h3>
+            
+            <div class="faq-item">
+                <div class="faq-question">
+                    Which tier should I choose?
+                </div>
+                <div class="faq-answer">
+                    <strong>Starter:</strong> Solo developers building personal projects<br>
+                    <strong>Pro:</strong> Professional developers shipping client work (best value!)<br>
+                    <strong>Agency:</strong> Teams of 5+ or agencies reselling to clients
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    Can I use this for client projects?
+                </div>
+                <div class="faq-answer">
+                    Yes! All tiers include commercial use. Pro and Agency include unlimited client projects.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    What if I need more seats later?
+                </div>
+                <div class="faq-answer">
+                    Upgrade anytime! Pay the difference and get pro-rated credit.
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    Do you offer discounts?
+                </div>
+                <div class="faq-answer">
+                    <strong>Students:</strong> 50% off (email us with .edu address)<br>
+                    <strong>Open Source:</strong> Free license for maintainers<br>
+                    <strong>Startups:</strong> 20% off for pre-seed/seed companies
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    How do updates work?
+                </div>
+                <div class="faq-answer">
+                    <strong>Starter:</strong> 1 year of free updates<br>
+                    <strong>Pro & Agency:</strong> Lifetime free updates (major versions included)
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">
+                    What if I get stuck?
+                </div>
+                <div class="faq-answer">
+                    Multiple support channels available:<br>
+                    • Documentation (comprehensive guides)<br>
+                    • Email support (24-48h response for Pro)<br>
+                    • Discord community (peer support)<br>
+                    • Office hours calls (monthly, Pro/Agency)<br>
+                    • Code review sessions (Pro/Agency)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown Timer
+        function updateCountdown() {
+            // Set launch end date (48 hours from now for demo)
+            const now = new Date();
+            const launchEnd = new Date(now.getTime() + (48 * 60 * 60 * 1000));
+            
+            function update() {
+                const currentTime = new Date().getTime();
+                const distance = launchEnd - currentTime;
+                
+                if (distance < 0) {
+                    document.getElementById('countdown').innerHTML = '<div style="color: #dc2626; font-weight: bold; font-size: 24px;">LAUNCH ENDED</div>';
+                    return;
+                }
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                document.getElementById('days').textContent = days.toString().padStart(2, '0');
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            }
+            
+            update();
+            setInterval(update, 1000);
+        }
+        
+        updateCountdown();
+
+        // Payment Option Selection
+        document.querySelectorAll('.payment-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // FAQ Toggle
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', function() {
+                const answer = this.nextElementSibling;
+                const isExpanded = answer.style.display === 'block';
+                
+                document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
+                
+                if (!isExpanded) {
+                    answer.style.display = 'block';
+                }
+            });
+        });
+
+        // Initialize FAQ
+        document.querySelectorAll('.faq-answer').forEach(answer => {
+            answer.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

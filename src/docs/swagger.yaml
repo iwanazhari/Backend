@@ -1,0 +1,359 @@
+openapi: 3.0.0
+info:
+    title: 'Backend Starter Kit API'
+    version: 3.0.0
+    description: "\nAuto-generated API documentation.\n\n## Features\n- 🚀 Real-time updates when code changes\n- 📝 JSDoc comments in routes\n- 🔐 JWT Authentication support\n- 📡 WebSocket endpoints\n\n## Authentication\nInclude JWT token in header:\n```\nAuthorization: Bearer <your-token>\n```\n\n## Base URL\n```\nDevelopment: http://localhost:1996/api\nProduction: http://localhost:1996/api\n```\n      "
+    contact:
+        name: 'API Support'
+        email: support@example.com
+    license:
+        name: MIT
+        url: 'https://opensource.org/licenses/MIT'
+servers:
+    -
+        url: /api
+        description: 'Current environment'
+    -
+        url: 'http://localhost:3000/api'
+        description: 'Development server'
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+            description: 'Enter your JWT token'
+    schemas:
+        Error:
+            type: object
+            properties:
+                success:
+                    type: boolean
+                    example: false
+                error:
+                    type: object
+                    properties:
+                        type:
+                            type: string
+                            example: BadRequestError
+                        message:
+                            type: string
+                            example: 'Email is required'
+                        code:
+                            type: string
+                            example: VALIDATION_ERROR
+                        at:
+                            type: object
+                            properties:
+                                method:
+                                    type: string
+                                    example: POST
+                                path:
+                                    type: string
+                                    example: /api/auth/register
+                                file:
+                                    type: string
+                                    example: src/middlewares/validator.js
+                                line:
+                                    type: integer
+                                    example: 15
+        Pagination:
+            type: object
+            properties:
+                total:
+                    type: integer
+                    example: 100
+                page:
+                    type: integer
+                    example: 1
+                limit:
+                    type: integer
+                    example: 10
+                totalPages:
+                    type: integer
+                    example: 10
+                hasNext:
+                    type: boolean
+                    example: true
+                hasPrev:
+                    type: boolean
+                    example: false
+        User:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                email:
+                    type: string
+                    format: email
+                firstName:
+                    type: string
+                lastName:
+                    type: string
+                role:
+                    type: string
+                    enum:
+                        - USER
+                        - ADMIN
+                        - MODERATOR
+                status:
+                    type: string
+                    enum:
+                        - ACTIVE
+                        - INACTIVE
+                        - SUSPENDED
+                        - BANNED
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+        Product:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                name:
+                    type: string
+                description:
+                    type: string
+                price:
+                    type: number
+                    format: decimal
+                stock:
+                    type: integer
+                status:
+                    type: string
+                    enum:
+                        - DRAFT
+                        - PUBLISHED
+                        - ARCHIVED
+                createdAt:
+                    type: string
+                    format: date-time
+                updatedAt:
+                    type: string
+                    format: date-time
+    responses:
+        UnauthorizedError:
+            description: 'Unauthorized access'
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+        NotFoundError:
+            description: 'Resource not found'
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+        BadRequestError:
+            description: 'Bad request'
+            content:
+                application/json:
+                    schema:
+                        $ref: '#/components/schemas/Error'
+tags:
+    -
+        name: Health
+        description: 'Health check endpoints'
+    -
+        name: Authentication
+        description: 'User authentication endpoints'
+    -
+        name: Users
+        description: 'User management endpoints'
+    -
+        name: Products
+        description: 'Product management endpoints'
+    -
+        name: WebSocket
+        description: 'WebSocket/Socket.IO endpoints'
+paths:
+    /api/products:
+        get:
+            summary: 'Get all products'
+            tags:
+                - Products
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    in: query
+                    name: page
+                    schema:
+                        type: integer
+                        default: 1
+                    description: 'Page number'
+                -
+                    in: query
+                    name: limit
+                    schema:
+                        type: integer
+                        default: 10
+                    description: 'Items per page'
+            responses:
+                '200':
+                    description: 'List of products'
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: {type: boolean}
+                                    data: {type: array, items: {$ref: '#/components/schemas/Product'}}
+                                    meta: {type: object, properties: {pagination: {$ref: '#/components/schemas/Pagination'}}}
+                '401':
+                    $ref: '#/components/responses/UnauthorizedError'
+        post:
+            summary: 'Create new product'
+            tags:
+                - Products
+            security:
+                -
+                    bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - name
+                                - price
+                            properties:
+                                name:
+                                    type: string
+                                description:
+                                    type: string
+                                price:
+                                    type: number
+                                stock:
+                                    type: integer
+                                    default: 0
+            responses:
+                '201':
+                    description: 'Product created successfully'
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: {type: boolean}
+                                    data: {$ref: '#/components/schemas/Product'}
+                '400':
+                    $ref: '#/components/responses/BadRequestError'
+                '401':
+                    $ref: '#/components/responses/UnauthorizedError'
+    '/api/products/{id}':
+        get:
+            summary: 'Get product by ID'
+            tags:
+                - Products
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    in: path
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+                        format: uuid
+                    description: 'Product ID'
+            responses:
+                '200':
+                    description: 'Product details'
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: {type: boolean}
+                                    data: {$ref: '#/components/schemas/Product'}
+                '401':
+                    $ref: '#/components/responses/UnauthorizedError'
+                '404':
+                    $ref: '#/components/responses/NotFoundError'
+        put:
+            summary: 'Update product'
+            tags:
+                - Products
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    in: path
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+                        format: uuid
+                    description: 'Product ID'
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                name:
+                                    type: string
+                                description:
+                                    type: string
+                                price:
+                                    type: number
+                                stock:
+                                    type: integer
+            responses:
+                '200':
+                    description: 'Product updated successfully'
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: {type: boolean}
+                                    data: {$ref: '#/components/schemas/Product'}
+                '400':
+                    $ref: '#/components/responses/BadRequestError'
+                '401':
+                    $ref: '#/components/responses/UnauthorizedError'
+                '404':
+                    $ref: '#/components/responses/NotFoundError'
+        delete:
+            summary: 'Delete product'
+            tags:
+                - Products
+            security:
+                -
+                    bearerAuth: []
+            parameters:
+                -
+                    in: path
+                    name: id
+                    required: true
+                    schema:
+                        type: string
+                        format: uuid
+                    description: 'Product ID'
+            responses:
+                '200':
+                    description: 'Product deleted successfully'
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    success: {type: boolean}
+                                    message: {type: string}
+                '401':
+                    $ref: '#/components/responses/UnauthorizedError'
+                '404':
+                    $ref: '#/components/responses/NotFoundError'

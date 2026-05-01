@@ -1,13 +1,13 @@
 /**
  * Database Seed Script
  * Populates database with initial data for development and testing
- * 
+ *
  * Usage:
  *   npm run prisma:seed
  *   npx prisma db seed
  */
 
-import { PrismaClient, Role, UserStatus, ProductStatus } from '@prisma/client';
+import { PrismaClient, Role, UserStatus, ProductStatus, OrderStatus } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -42,7 +42,7 @@ async function createUser({
   status: UserStatus;
 }) {
   const hashedPassword = await hashPassword(password);
-  
+
   return prisma.user.upsert({
     where: { email },
     update: {},
@@ -67,6 +67,7 @@ async function createProduct(data: {
   price: number;
   stock?: number;
   status?: ProductStatus;
+  userId: string;
 }) {
   return prisma.product.create({
     data: {
@@ -75,6 +76,7 @@ async function createProduct(data: {
       price: data.price,
       stock: data.stock ?? 100,
       status: data.status ?? ProductStatus.PUBLISHED,
+      userId: data.userId,
     },
   });
 }
@@ -88,7 +90,7 @@ async function createProduct(data: {
  */
 async function seedUsers() {
   console.log('📦 Seeding users...');
-  
+
   // Admin user
   const admin = await createUser({
     email: 'admin@example.com',
@@ -99,7 +101,7 @@ async function seedUsers() {
     status: UserStatus.ACTIVE,
   });
   console.log(`  ✅ Admin user: ${admin.email}`);
-  
+
   // Moderator user
   const moderator = await createUser({
     email: 'moderator@example.com',
@@ -110,7 +112,7 @@ async function seedUsers() {
     status: UserStatus.ACTIVE,
   });
   console.log(`  ✅ Moderator user: ${moderator.email}`);
-  
+
   // Regular users
   const users = await Promise.all([
     createUser({
@@ -138,9 +140,9 @@ async function seedUsers() {
       status: UserStatus.ACTIVE,
     }),
   ]);
-  
+
   console.log(`  ✅ Created ${users.length} regular users`);
-  
+
   // Inactive user (for testing)
   const inactiveUser = await createUser({
     email: 'inactive@example.com',
@@ -151,16 +153,18 @@ async function seedUsers() {
     status: UserStatus.INACTIVE,
   });
   console.log(`  ✅ Inactive user: ${inactiveUser.email}`);
-  
+
   return { admin, moderator, users };
 }
 
 /**
  * Seed products
  */
-async function seedProducts() {
+async function seedProducts(users: any[]) {
   console.log('📦 Seeding products...');
-  
+
+  const adminUser = users[0];
+
   const products = await Promise.all([
     createProduct({
       name: 'Laptop Pro 15"',
@@ -168,6 +172,7 @@ async function seedProducts() {
       price: 1299.99,
       stock: 50,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Wireless Mouse',
@@ -175,6 +180,7 @@ async function seedProducts() {
       price: 49.99,
       stock: 200,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Mechanical Keyboard',
@@ -182,6 +188,7 @@ async function seedProducts() {
       price: 149.99,
       stock: 75,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'USB-C Hub',
@@ -189,6 +196,7 @@ async function seedProducts() {
       price: 79.99,
       stock: 150,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Monitor 27" 4K',
@@ -196,6 +204,7 @@ async function seedProducts() {
       price: 399.99,
       stock: 30,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Webcam 1080p',
@@ -203,6 +212,7 @@ async function seedProducts() {
       price: 89.99,
       stock: 100,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Desk Lamp',
@@ -210,6 +220,7 @@ async function seedProducts() {
       price: 39.99,
       stock: 120,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Office Chair',
@@ -217,6 +228,7 @@ async function seedProducts() {
       price: 299.99,
       stock: 25,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Standing Desk',
@@ -224,6 +236,7 @@ async function seedProducts() {
       price: 599.99,
       stock: 15,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
     createProduct({
       name: 'Noise Cancelling Headphones',
@@ -231,11 +244,12 @@ async function seedProducts() {
       price: 349.99,
       stock: 60,
       status: ProductStatus.PUBLISHED,
+      userId: adminUser.id,
     }),
   ]);
-  
+
   console.log(`  ✅ Created ${products.length} products`);
-  
+
   // Create draft product (for testing)
   const draftProduct = await createProduct({
     name: 'Draft Product',
@@ -243,9 +257,10 @@ async function seedProducts() {
     price: 99.99,
     stock: 0,
     status: ProductStatus.DRAFT,
+    userId: adminUser.id,
   });
   console.log(`  ✅ Created draft product: ${draftProduct.name}`);
-  
+
   return products;
 }
 
@@ -254,12 +269,12 @@ async function seedProducts() {
  */
 async function seedApiKeys(users: any[]) {
   console.log('📦 Seeding API keys...');
-  
+
   // Note: API keys should be hashed in production
   // This is for development/testing only
-  
+
   const adminUser = users[0];
-  
+
   const apiKey = await prisma.apiKey.create({
     data: {
       name: 'Development Key',
@@ -276,10 +291,10 @@ async function seedApiKeys(users: any[]) {
       permissions: true,
     },
   });
-  
+
   console.log(`  ✅ Created API key: ${apiKey.name} (${apiKey.keyPrefix}...)`);
   console.log(`     ⚠️  Raw key: dev_api_key_123456789012345678901234567890`);
-  
+
   return { apiKey };
 }
 
@@ -288,30 +303,30 @@ async function seedApiKeys(users: any[]) {
  */
 async function main() {
   console.log('🌱 Starting database seed...\n');
-  
+
   try {
     // Seed users
     const { admin, moderator, users } = await seedUsers();
     console.log();
-    
+
     // Seed products
-    const products = await seedProducts();
+    const products = await seedProducts(users);
     console.log();
-    
+
     // Seed API keys
     const { apiKey } = await seedApiKeys(users);
     console.log();
-    
+
     // Summary
     console.log('============================================');
     console.log('✅ Database seeding completed successfully!');
     console.log('============================================\n');
-    
+
     console.log('📊 Summary:');
     console.log(`  - Users: ${users.length + 3} (1 admin, 1 moderator, ${users.length} users, 1 inactive)`);
     console.log(`  - Products: ${products.length + 1} (${products.length} published, 1 draft)`);
     console.log(`  - API Keys: 1\n`);
-    
+
     console.log('🔐 Test Credentials:');
     console.log('  Admin:');
     console.log('    Email: admin@example.com');
@@ -319,11 +334,11 @@ async function main() {
     console.log('  User:');
     console.log('    Email: user1@example.com');
     console.log('    Password: User123!\n');
-    
+
     console.log('🔑 API Key (Development):');
     console.log('    Key: dev_api_key_123456789012345678901234567890');
     console.log('    Prefix: dev_key_...\n');
-    
+
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     process.exit(1);
