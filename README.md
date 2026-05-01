@@ -9,6 +9,18 @@
 
 ---
 
+## 🎥 Demo
+
+<div align="center">
+  <video width="640" height="480" controls>
+    <source src="docs/videos/demo.webm" type="video/webm">
+    Your browser does not support the video tag.
+  </video>
+  <p><em>LockKit Demo - Quick Start in 5 Minutes</em></p>
+</div>
+
+---
+
 ## 🎯 What is LockKit?
 
 **LockKit** adalah sistem autentikasi & otorisasi **production-ready** yang lengkap dengan **306 tests (100% passing)**, mendukung **Express.js**, **NestJS**, dan **Fastify**, serta memiliki **CLI tool** untuk setup instan tanpa code!
