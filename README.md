@@ -72,18 +72,27 @@ npm run dev
 ```bash
 # Initialization
 lockkit init                    # lk i
-lockkit help                    # lk h
 
-# Generate
+# Generate - ALL FILES AT ONCE! ⭐
+lockkit generate:all User       # lk g:all User
+# Generates: Model + Controller + Service + Repository + Routes + Test
+
+# Generate - Individual Files
 lockkit generate:key            # lk g:key
 lockkit generate:model User     # lk g:model User
 lockkit generate:controller     # lk g:controller Auth
 lockkit generate:service        # lk g:service UserService
+lockkit generate:repository     # lk g:repo Order
+lockkit generate:routes         # lk g:routes Product
+lockkit generate:test           # lk g:test Auth
 
 # Install Framework
 lockkit install:express         # lk i:express
 lockkit install:nestjs          # lk i:nestjs
 lockkit install:fastify         # lk i:fastify
+
+# Help
+lockkit help                    # lk h
 ```
 
 ---

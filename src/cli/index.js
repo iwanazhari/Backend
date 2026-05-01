@@ -35,9 +35,13 @@ const colors = {
 const commands = {
   init: { description: 'Initialize LockKit project', usage: 'init [options]', shortcuts: ['i', 'new'] },
   'generate:key': { description: 'Generate secure key', usage: 'generate:key', shortcuts: ['g:key', 'gen:key'] },
+  'generate:all': { description: 'Generate all files (model+controller+service+repo+routes+test)', usage: 'generate:all <name>', shortcuts: ['g:all', 'gen:all'] },
   'generate:model': { description: 'Generate model', usage: 'generate:model <name>', shortcuts: ['g:model', 'gen:m'] },
   'generate:controller': { description: 'Generate controller', usage: 'generate:controller <name>', shortcuts: ['g:controller', 'gen:c'] },
   'generate:service': { description: 'Generate service', usage: 'generate:service <name>', shortcuts: ['g:service', 'gen:s'] },
+  'generate:repository': { description: 'Generate repository', usage: 'generate:repository <name>', shortcuts: ['g:repo', 'gen:r'] },
+  'generate:routes': { description: 'Generate routes', usage: 'generate:routes <name>', shortcuts: ['g:routes', 'gen:routes'] },
+  'generate:test': { description: 'Generate test', usage: 'generate:test <name>', shortcuts: ['g:test', 'gen:t'] },
   'install:express': { description: 'Install Express adapter', usage: 'install:express', shortcuts: ['i:express', 'add:express'] },
   'install:nestjs': { description: 'Install NestJS adapter', usage: 'install:nestjs', shortcuts: ['i:nestjs', 'add:nestjs'] },
   'install:fastify': { description: 'Install Fastify adapter', usage: 'install:fastify', shortcuts: ['i:fastify', 'add:fastify'] },
@@ -52,12 +56,20 @@ const aliases = {
   'gen': 'generate',
   'g:key': 'generate:key',
   'gen:key': 'generate:key',
+  'g:all': 'generate:all',
+  'gen:all': 'generate:all',
   'g:model': 'generate:model',
   'gen:m': 'generate:model',
   'g:controller': 'generate:controller',
   'gen:c': 'generate:controller',
   'g:service': 'generate:service',
   'gen:s': 'generate:service',
+  'g:repository': 'generate:repository',
+  'gen:r': 'generate:repository',
+  'g:routes': 'generate:routes',
+  'gen:routes': 'generate:routes',
+  'g:test': 'generate:test',
+  'gen:t': 'generate:test',
   'i:express': 'install:express',
   'add:express': 'install:express',
   'i:nestjs': 'install:nestjs',
@@ -161,6 +173,39 @@ function generateKey() {
   console.log(`${colors.green}✓${colors.reset} Key generated:\n`);
   console.log(`${colors.cyan}LOCK_KEY=${key}${colors.reset}\n`);
   console.log(`${colors.yellow}Add this to your .env file${colors.reset}\n`);
+}
+
+function generateAll(name) {
+  console.log(`${colors.blue}Generating all files for: ${name}${colors.reset}\n`);
+  
+  console.log(`${colors.yellow}Step 1/6:${colors.reset} Generating model...`);
+  generateModel(name);
+  
+  console.log(`\n${colors.yellow}Step 2/6:${colors.reset} Generating controller...`);
+  generateController(name);
+  
+  console.log(`\n${colors.yellow}Step 3/6:${colors.reset} Generating service...`);
+  generateService(name);
+  
+  console.log(`\n${colors.yellow}Step 4/6:${colors.reset} Generating repository...`);
+  generateRepository(name);
+  
+  console.log(`\n${colors.yellow}Step 5/6:${colors.reset} Generating routes...`);
+  generateRoutes(name);
+  
+  console.log(`\n${colors.yellow}Step 6/6:${colors.reset} Generating test...`);
+  generateTest(name);
+  
+  console.log(`\n${colors.green}═══════════════════════════════════════════════════════${colors.reset}`);
+  console.log(`${colors.green}✅ ALL FILES GENERATED!${colors.reset}`);
+  console.log(`${colors.green}═══════════════════════════════════════════════════════${colors.reset}\n`);
+  
+  console.log(`${colors.yellow}Next Steps:${colors.reset}`);
+  console.log(`  1. Add model to prisma/schema.prisma`);
+  console.log(`  2. Run: npm run prisma:generate`);
+  console.log(`  3. Run: npm run prisma:migrate`);
+  console.log(`  4. Register routes in src/routes/index.ts`);
+  console.log(`  5. Run tests: npm test\n`);
 }
 
 function generateModel(name) {
@@ -327,6 +372,10 @@ async function main() {
     case 'generate:model': params[0] ? generateModel(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
     case 'generate:controller': params[0] ? generateController(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
     case 'generate:service': params[0] ? generateService(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
+    case 'generate:all': params[0] ? generateAll(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
+    case 'generate:repository': params[0] ? generateRepository(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
+    case 'generate:routes': params[0] ? generateRoutes(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
+    case 'generate:test': params[0] ? generateTest(params[0]) : console.log(`${colors.red}✗${colors.reset} Name required`); break;
     case 'install:express': installFramework('express'); break;
     case 'install:nestjs': installFramework('nestjs'); break;
     case 'install:fastify': installFramework('fastify'); break;
@@ -339,3 +388,51 @@ main().catch(error => {
   console.error(`${colors.red}Error:${colors.reset}`, error);
   process.exit(1);
 });
+
+// Additional generate functions
+function generateRepository(name) {
+  console.log(`${colors.blue}Generating repository: ${name}${colors.reset}\n`);
+  const repository = `import { BaseRepository } from './BaseRepository.js';
+
+export class ${name}Repository extends BaseRepository {
+  async findByUserId(userId) {
+    return this.prisma.${name.toLowerCase()}.findMany({ where: { userId } });
+  }
+}`;
+  console.log(repository);
+  console.log(`\n${colors.green}✓${colors.reset} Repository generated`);
+}
+
+function generateRoutes(name) {
+  console.log(`${colors.blue}Generating routes: ${name}${colors.reset}\n`);
+  const routes = `import { Router } from 'express';
+import ${name}Controller from '../controllers/${name}Controller.js';
+import { authenticate } from '../middlewares/authenticate.js';
+
+const router = Router();
+router.get('/', authenticate, ${name}Controller.getAll);
+router.get('/:id', authenticate, ${name}Controller.getById);
+router.post('/', authenticate, ${name}Controller.create);
+router.put('/:id', authenticate, ${name}Controller.update);
+router.delete('/:id', authenticate, ${name}Controller.delete);
+
+export default router;`;
+  console.log(routes);
+  console.log(`\n${colors.green}✓${colors.reset} Routes generated`);
+}
+
+function generateTest(name) {
+  console.log(`${colors.blue}Generating test: ${name}${colors.reset}\n`);
+  const test = `import { describe, it, expect } from 'vitest';
+import ${name}Service from '../../src/services/${name}Service.js';
+
+describe('${name}Service', () => {
+  it('should be defined', () => expect(${name}Service).toBeDefined());
+  it('should get all', async () => {
+    const result = await ${name}Service.getAll();
+    expect(result).toBeDefined();
+  });
+});`;
+  console.log(test);
+  console.log(`\n${colors.green}✓${colors.reset} Test generated`);
+}
